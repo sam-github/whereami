@@ -19,6 +19,8 @@ func TestWalk(t *testing.T) {
 	err := walk("testdata", &b)
 	require.NoError(t, err)
 	t.Logf("out: %q", b.String())
-	require.Contains(t, b.String(), "testdata/anubis.jpg")
-	require.Contains(t, b.String(), "testdata/subdir/wax-card.jpg")
+	require.Contains(t, b.String(),
+		`"testdata/anubis.jpg",49.254444444444445,-123.1`)
+	require.Contains(t, b.String(),
+		`"testdata/subdir/wax-card.jpg",49.254444444444445,-123.1`)
 }
