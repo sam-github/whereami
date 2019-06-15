@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"os"
 )
 
@@ -17,7 +18,14 @@ func main() {
 	}
 	if os.Args[1] == "-h" || os.Args[1] == "-help" {
 		fmt.Fprintf(os.Stdout, HELP, os.Args[0])
-	} else {
-		fmt.Printf("tree-of-images: %s\n", os.Args[1])
+		return
 	}
+
+	err := walk(os.Args[1], os.Stdout)
+
+	if err == nil {
+		return
+	}
+
+	log.Fatal(err)
 }
