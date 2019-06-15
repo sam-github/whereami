@@ -18,6 +18,7 @@ func TestWalk(t *testing.T) {
 	var b strings.Builder
 	err := walk("testdata", &b)
 	require.NoError(t, err)
-	require.Contains(t, b.String(), "anubis.jpg")
-	require.Contains(t, b.String(), "wax-card.jpg")
+	t.Logf("out: %q", b.String())
+	require.Contains(t, b.String(), "testdata/anubis.jpg")
+	require.Contains(t, b.String(), "testdata/subdir/wax-card.jpg")
 }

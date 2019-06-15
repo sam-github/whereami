@@ -17,7 +17,7 @@ func walk(root string, out io.Writer) error {
 			return nil
 		}
 
-		fmt.Fprintf(out, "%s\n", info.Name())
+		fmt.Fprintf(out, "%s\n", path)
 		return nil
 	}
 	return filepath.Walk(root, walker)
