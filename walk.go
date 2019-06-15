@@ -8,20 +8,17 @@ import (
 )
 
 func walk(root string, out io.Writer) error {
-	fmt.Fprintf(out, "tree-of-images: %s\n", root)
+	var walker = func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
 
-	return filepath.Walk(root, walker)
-}
+		if !info.Mode().IsRegular() {
+			return nil
+		}
 
-func walker(path string, info os.FileInfo, err error) error {
-	if err != nil {
-		return err
-	}
-
-	if !info.Mode().IsRegular() {
+		fmt.Fprintf(out, "%s\n", info.Name())
 		return nil
 	}
-
-	fmt.Println(info.Name())
-	return nil
+	return filepath.Walk(root, walker)
 }
