@@ -93,7 +93,10 @@ func extract(file string) (ll *LatLong) {
 	}
 }
 
-func latlong(files <-chan FileInfo) <-chan *LatLong {
+func latlong(j int, files <-chan FileInfo) <-chan *LatLong {
+	if j < 1 {
+		j = runtime.GOMAXPROCS(0)
+	}
 	ch := make(chan *LatLong)
 	var wg sync.WaitGroup
 
@@ -108,7 +111,7 @@ func latlong(files <-chan FileInfo) <-chan *LatLong {
 		}
 	}
 
-	for i := 0; i < runtime.GOMAXPROCS(0); i++ {
+	for i := 0; i < j; i++ {
 		wg.Add(1)
 		go worker()
 	}
@@ -137,7 +140,7 @@ func csv(latlongs <-chan *LatLong, outf io.Writer, errf io.Writer) error {
 }
 
 func walk(root string, outf io.Writer, errf io.Writer) error {
-	err := csv(latlong(files(root)), outf, errf)
+	err := csv(latlong(0, files(root)), outf, errf)
 
 	// Failing on `root` is pretty bad, anything else we can handle and consider
 	// success.
