@@ -6,6 +6,8 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"runtime"
+	"sync"
 
 	exif "github.com/dsoprea/go-exif"
 )
@@ -89,21 +91,37 @@ func latlong(files <-chan string, errors <-chan error) (
 	<-chan LatLong, <-chan error) {
 	ch := make(chan LatLong)
 	cherr := make(chan error)
-	go func() {
-		defer close(ch)
-		defer close(cherr)
+	var wg sync.WaitGroup
+
+	worker := func() {
+		defer wg.Done()
 		for {
 			select {
 			case err := <-errors:
 				cherr <- err
 				return // Fail fast and pass it on
-			case file := <-files:
+			case file, ok := <-files:
+				if !ok {
+					return
+				}
 				if ll, ok := extract(file); ok {
 					ch <- ll
 				}
 			}
 		}
+	}
+
+	for i := 0; i < runtime.GOMAXPROCS(0); i++ {
+		wg.Add(1)
+		go worker()
+	}
+
+	go func() {
+		wg.Wait()
+		close(ch)
+		close(cherr)
 	}()
+
 	return ch, cherr
 }
 
@@ -111,8 +129,13 @@ func csv(ll <-chan LatLong, errors <-chan error, out io.Writer) error {
 	for {
 		select {
 		case err := <-errors:
-			return err
-		case exif := <-ll:
+			if err != nil {
+				return err
+			}
+		case exif, ok := <-ll:
+			if !ok {
+				return nil
+			}
 			fmt.Fprintf(out, "%q,%v,%v\n",
 				exif.path, exif.latitude, exif.longitude)
 		}
