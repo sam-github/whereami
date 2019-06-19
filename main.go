@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"os"
 )
 
@@ -21,11 +20,9 @@ func main() {
 		return
 	}
 
-	err := walk(os.Args[1], os.Stdout)
+	err := walk(os.Args[1], os.Stdout, os.Stderr)
 
-	if err == nil {
-		return
+	if err != nil {
+		os.Exit(1)
 	}
-
-	log.Fatal(err)
 }

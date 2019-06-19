@@ -12,17 +12,19 @@ import (
 	exif "github.com/dsoprea/go-exif"
 )
 
-func files(root string) (<-chan string, <-chan error) {
-	ch := make(chan string)
-	cherr := make(chan error)
+type FileInfo struct {
+	path string
+	err  error
+}
+
+func files(root string) <-chan FileInfo {
+	ch := make(chan FileInfo)
 
 	var walker = func(path string, info os.FileInfo, err error) error {
 		if err != nil {
-			return err
-		}
-
-		if info.Mode().IsRegular() {
-			ch <- path
+			ch <- FileInfo{path, err}
+		} else if info.Mode().IsRegular() {
+			ch <- FileInfo{path, nil}
 		}
 
 		return nil
@@ -30,23 +32,23 @@ func files(root string) (<-chan string, <-chan error) {
 
 	go func() {
 		defer close(ch)
-		defer close(cherr)
 		err := filepath.Walk(root, walker)
 		if err != nil {
-			cherr <- err
+			log.Panic(err) // Walker never returns error.
 		}
 	}()
 
-	return ch, cherr
+	return ch
 }
 
 type LatLong struct {
 	path      string
 	latitude  float64
 	longitude float64
+	err       error
 }
 
-func extract(file string) (ll LatLong, ok bool) {
+func extract(file string) (ll *LatLong) {
 	// Despite the declaration, exif.SearchFileAndExtractExif never returns
 	// a non-nil error, it panics if anything goes wrong! It shouldn't do
 	// this, its unidiomatic AFAICT.  I could open the file myself, slurp it
@@ -84,29 +86,24 @@ func extract(file string) (ll LatLong, ok bool) {
 		return // Stuff that is supposed to be GPS info wasn't, ignore.
 	}
 
-	return LatLong{file, gi.Latitude.Decimal(), gi.Longitude.Decimal()}, true
+	return &LatLong{
+		path:      file,
+		latitude:  gi.Latitude.Decimal(),
+		longitude: gi.Longitude.Decimal(),
+	}
 }
 
-func latlong(files <-chan string, errors <-chan error) (
-	<-chan LatLong, <-chan error) {
-	ch := make(chan LatLong)
-	cherr := make(chan error)
+func latlong(files <-chan FileInfo) <-chan *LatLong {
+	ch := make(chan *LatLong)
 	var wg sync.WaitGroup
 
 	worker := func() {
 		defer wg.Done()
-		for {
-			select {
-			case err := <-errors:
-				cherr <- err
-				return // Fail fast and pass it on
-			case file, ok := <-files:
-				if !ok {
-					return
-				}
-				if ll, ok := extract(file); ok {
-					ch <- ll
-				}
+		for fi := range files {
+			if fi.err != nil {
+				ch <- &LatLong{path: fi.path, err: fi.err}
+			} else if ll := extract(fi.path); ll != nil {
+				ch <- ll
 			}
 		}
 	}
@@ -119,31 +116,34 @@ func latlong(files <-chan string, errors <-chan error) (
 	go func() {
 		wg.Wait()
 		close(ch)
-		close(cherr)
 	}()
 
-	return ch, cherr
+	return ch
 }
 
-func csv(ll <-chan LatLong, errors <-chan error, out io.Writer) error {
-	for {
-		select {
-		case err := <-errors:
-			if err != nil {
-				return err
+func csv(latlongs <-chan *LatLong, outf io.Writer, errf io.Writer) error {
+	var err error
+	for ll := range latlongs {
+		if ll.err != nil {
+			fmt.Fprintf(errf, "%s\n", ll.err)
+			if err == nil {
+				err = ll.err
 			}
-		case exif, ok := <-ll:
-			if !ok {
-				return nil
-			}
-			fmt.Fprintf(out, "%q,%v,%v\n",
-				exif.path, exif.latitude, exif.longitude)
+		} else {
+			fmt.Fprintf(outf, "%q,%v,%v\n", ll.path, ll.latitude, ll.longitude)
 		}
 	}
+	return err
 }
 
-func walk(root string, out io.Writer) error {
-	f, cherr := files(root)
-	l, cherr := latlong(f, cherr)
-	return csv(l, cherr, out)
+func walk(root string, outf io.Writer, errf io.Writer) error {
+	err := csv(latlong(files(root)), outf, errf)
+
+	// Failing on `root` is pretty bad, anything else we can handle and consider
+	// success.
+	if e, ok := err.(*os.PathError); ok && e.Path == root {
+		return err
+	}
+
+	return nil
 }
