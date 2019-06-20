@@ -12,7 +12,7 @@ import (
 func TestWalkNexist(t *testing.T) {
 	var b strings.Builder
 	var e strings.Builder
-	err := walk("no-such-dir", &b, &e)
+	err := walk(0, "no-such-dir", &b, &e)
 	require.Error(t, err)
 	t.Logf("out: %q", e.String())
 	require.Empty(t, b.String())
@@ -22,7 +22,7 @@ func TestWalkNexist(t *testing.T) {
 func TestWalk(t *testing.T) {
 	var b strings.Builder
 	var e strings.Builder
-	err := walk("testdata", &b, &e)
+	err := walk(0, "testdata", &b, &e)
 	require.NoError(t, err)
 	t.Logf("out: %q", b.String())
 	require.Contains(t, b.String(),

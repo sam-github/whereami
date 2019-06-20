@@ -1,26 +1,42 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"os"
+	"runtime"
 )
 
-var HELP = `usage: %s <tree-of-images>
+var HELP = `usage: %s [-j N] [-h] <tree-of-images>
   Print to stdout location information for all images found
   in 'tree-of-images'.
+
 `
 
 func main() {
-	if len(os.Args) != 2 {
-		fmt.Fprint(os.Stderr, HELP, os.Args[0])
-		os.Exit(2)
+	j := flag.Int("j", runtime.GOMAXPROCS(0), "use `N` concurrent workers")
+	h := flag.Bool("h", false, "print a helpful message")
+
+	flag.Usage = func() {
+		fmt.Fprintf(os.Stderr, HELP, os.Args[0])
+		flag.PrintDefaults()
 	}
-	if os.Args[1] == "-h" || os.Args[1] == "-help" {
+
+	flag.Parse()
+
+	if *h {
+		flag.CommandLine.SetOutput(os.Stdout)
 		fmt.Fprintf(os.Stdout, HELP, os.Args[0])
+		flag.PrintDefaults()
 		return
 	}
 
-	err := walk(os.Args[1], os.Stdout, os.Stderr)
+	if flag.NArg() != 1 {
+		fmt.Fprintf(os.Stderr, "Missing argument, try `%s -h`", os.Args[0])
+		os.Exit(2)
+	}
+
+	err := walk(*j, flag.Arg(0), os.Stdout, os.Stderr)
 
 	if err != nil {
 		os.Exit(1)

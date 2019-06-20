@@ -139,8 +139,8 @@ func csv(latlongs <-chan *LatLong, outf io.Writer, errf io.Writer) error {
 	return err
 }
 
-func walk(root string, outf io.Writer, errf io.Writer) error {
-	err := csv(latlong(0, files(root)), outf, errf)
+func walk(j int, root string, outf io.Writer, errf io.Writer) error {
+	err := csv(latlong(j, files(root)), outf, errf)
 
 	// Failing on `root` is pretty bad, anything else we can handle and consider
 	// success.
