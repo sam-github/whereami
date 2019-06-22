@@ -22,7 +22,8 @@ var END = `
 
 func Html(root string, outf io.Writer) Lister {
 	fmt.Fprintf(outf, BEG, root, root)
-	return func(ch <-chan *LatLong, outf io.Writer, errf io.Writer) error {
+
+	return func(ch <-chan *LatLongInfo, outf io.Writer, errf io.Writer) error {
 		var err error
 
 		for ll := range ch {

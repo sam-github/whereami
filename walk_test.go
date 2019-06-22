@@ -12,7 +12,7 @@ import (
 func TestWalkNexist(t *testing.T) {
 	var b strings.Builder
 	var e strings.Builder
-	err := walk(0, "no-such-dir", csv, &b, &e)
+	err := Walk(0, "no-such-dir", Csv(), &b, &e)
 	require.Error(t, err)
 	t.Logf("out: %q", e.String())
 	require.Empty(t, b.String())
@@ -22,7 +22,7 @@ func TestWalkNexist(t *testing.T) {
 func TestWalk(t *testing.T) {
 	var b strings.Builder
 	var e strings.Builder
-	err := walk(0, "testdata", csv, &b, &e)
+	err := Walk(0, "testdata", Csv(), &b, &e)
 	require.NoError(t, err)
 	t.Logf("out: %q", b.String())
 	require.Contains(t, b.String(),
@@ -46,7 +46,7 @@ func BenchmarkFilepath_Parallel_Csv(b *testing.B) {
 	d := ioutil.Discard
 
 	for i := 0; i < b.N; i++ {
-		err := csv(latlong(0, files(BENCHROOT)), d, d)
+		err := Csv()(LatLong(0, Files(BENCHROOT)), d, d)
 		if err != nil {
 			b.FailNow()
 		}
@@ -57,7 +57,7 @@ func BenchmarkFilepath_Sequential_Csv(b *testing.B) {
 	d := ioutil.Discard
 
 	for i := 0; i < b.N; i++ {
-		err := csv(latlong(1, files(BENCHROOT)), d, d)
+		err := Csv()(LatLong(1, Files(BENCHROOT)), d, d)
 		if err != nil {
 			b.FailNow()
 		}

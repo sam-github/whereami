@@ -6,14 +6,14 @@ import (
 	exif "github.com/dsoprea/go-exif"
 )
 
-type LatLong struct {
+type LatLongInfo struct {
 	path      string
 	latitude  float64
 	longitude float64
 	err       error
 }
 
-func extract(file string) (ll *LatLong) {
+func extract(file string) (ll *LatLongInfo) {
 	// Despite the declaration, exif.SearchFileAndExtractExif never returns
 	// a non-nil error, it panics if anything goes wrong! It shouldn't do
 	// this, its unidiomatic AFAICT.  I could open the file myself, slurp it
@@ -51,7 +51,7 @@ func extract(file string) (ll *LatLong) {
 		return // Stuff that is supposed to be GPS info wasn't, ignore.
 	}
 
-	return &LatLong{
+	return &LatLongInfo{
 		path:      file,
 		latitude:  gi.Latitude.Decimal(),
 		longitude: gi.Longitude.Decimal(),

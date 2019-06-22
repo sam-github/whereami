@@ -5,18 +5,18 @@ import (
 	"sync"
 )
 
-func latlong(j int, files <-chan FileInfo) <-chan *LatLong {
+func LatLong(j int, files <-chan FileInfo) <-chan *LatLongInfo {
 	if j < 1 {
 		j = runtime.GOMAXPROCS(0)
 	}
-	ch := make(chan *LatLong)
+	ch := make(chan *LatLongInfo)
 	var wg sync.WaitGroup
 
 	worker := func() {
 		defer wg.Done()
 		for fi := range files {
 			if fi.err != nil {
-				ch <- &LatLong{path: fi.path, err: fi.err}
+				ch <- &LatLongInfo{path: fi.path, err: fi.err}
 			} else if ll := extract(fi.path); ll != nil {
 				ch <- ll
 			}

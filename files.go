@@ -11,7 +11,7 @@ type FileInfo struct {
 	err  error
 }
 
-func files(root string) <-chan FileInfo {
+func Files(root string) <-chan FileInfo {
 	ch := make(chan FileInfo)
 
 	var walker = func(path string, info os.FileInfo, err error) error {

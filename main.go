@@ -14,8 +14,8 @@ var HELP = `usage: %s [-j N] [-h] <tree-of-images>
 
 `
 
-// A function that can list LatLong in some format.
-type Lister func(<-chan *LatLong, io.Writer, io.Writer) error
+// A function that can list LatLongInfo in some format.
+type Lister func(<-chan *LatLongInfo, io.Writer, io.Writer) error
 
 func main() {
 	h := flag.Bool("h", false, "print a helpful message")
@@ -46,10 +46,10 @@ func main() {
 	if *H {
 		out = Html(flag.Arg(0), os.Stdout)
 	} else {
-		out = csv
+		out = Csv()
 	}
 
-	err := walk(*j, flag.Arg(0), out, os.Stdout, os.Stderr)
+	err := Walk(*j, flag.Arg(0), out, os.Stdout, os.Stderr)
 
 	if err != nil {
 		os.Exit(1)
