@@ -1,8 +1,10 @@
 package main
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -12,7 +14,7 @@ import (
 func TestWalkNexist(t *testing.T) {
 	var b strings.Builder
 	var e strings.Builder
-	err := Walk(0, "no-such-dir", Csv(), &b, &e)
+	err := Walk(1, "no-such-dir", Csv(), &b, &e)
 	require.Error(t, err)
 	t.Logf("out: %q", e.String())
 	require.Empty(t, b.String())
@@ -40,9 +42,23 @@ func init() {
 	if br := os.Getenv("BENCHROOT"); len(br) > 0 {
 		BENCHROOT = br
 	}
+
+	fmt.Println("BENCHROOT=", BENCHROOT)
+	fmt.Println("GOMAXPROCS=", runtime.GOMAXPROCS(0))
 }
 
-func BenchmarkFilepath_Parallel_Csv(b *testing.B) {
+func BenchmarkFILES_MAX__EXIF_MAX(b *testing.B) {
+	d := ioutil.Discard
+
+	for i := 0; i < b.N; i++ {
+		err := Csv()(LatLong(0, FilesJ(0, BENCHROOT)), d, d)
+		if err != nil {
+			b.FailNow()
+		}
+	}
+}
+
+func BenchmarkFILES_1__EXIF_MAX(b *testing.B) {
 	d := ioutil.Discard
 
 	for i := 0; i < b.N; i++ {
@@ -53,7 +69,18 @@ func BenchmarkFilepath_Parallel_Csv(b *testing.B) {
 	}
 }
 
-func BenchmarkFilepath_Sequential_Csv(b *testing.B) {
+func BenchmarkFILES_MAX__EXIF_1(b *testing.B) {
+	d := ioutil.Discard
+
+	for i := 0; i < b.N; i++ {
+		err := Csv()(LatLong(1, FilesJ(0, BENCHROOT)), d, d)
+		if err != nil {
+			b.FailNow()
+		}
+	}
+}
+
+func BenchmarkFILES_1__EXIF_1(b *testing.B) {
 	d := ioutil.Discard
 
 	for i := 0; i < b.N; i++ {
