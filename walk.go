@@ -12,7 +12,7 @@ func Walk(
 	outf io.Writer,
 	errf io.Writer,
 ) error {
-	err := list(LatLong(j, FilesJ(j, root)), outf, errf)
+	err := list(LatLong(j, Files(root)), outf, errf)
 
 	// Failing on `root` is pretty bad, anything else we can handle and consider
 	// success.

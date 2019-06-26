@@ -47,29 +47,29 @@ func init() {
 	fmt.Println("GOMAXPROCS=", runtime.GOMAXPROCS(0))
 }
 
-func BenchmarkMTJ_MAX__EXIF_MAX(b *testing.B) {
+func BenchmarkMTJ__EXIF_3MAX(b *testing.B) {
 	d := ioutil.Discard
 
 	for i := 0; i < b.N; i++ {
-		err := Csv()(LatLong(0, FilesMtj(BENCHROOT)), d, d)
+		err := Csv()(LatLong(3*runtime.GOMAXPROCS(0), Files(BENCHROOT)), d, d)
 		if err != nil {
 			b.FailNow()
 		}
 	}
 }
 
-func BenchmarkFILES_MAX__EXIF_MAX(b *testing.B) {
+func BenchmarkMTJ__EXIF_2MAX(b *testing.B) {
 	d := ioutil.Discard
 
 	for i := 0; i < b.N; i++ {
-		err := Csv()(LatLong(0, FilesJ(0, BENCHROOT)), d, d)
+		err := Csv()(LatLong(2*runtime.GOMAXPROCS(0), Files(BENCHROOT)), d, d)
 		if err != nil {
 			b.FailNow()
 		}
 	}
 }
 
-func BenchmarkFILES_1__EXIF_MAX(b *testing.B) {
+func BenchmarkMTJ__EXIF_MAX(b *testing.B) {
 	d := ioutil.Discard
 
 	for i := 0; i < b.N; i++ {
@@ -80,18 +80,7 @@ func BenchmarkFILES_1__EXIF_MAX(b *testing.B) {
 	}
 }
 
-func BenchmarkFILES_MAX__EXIF_1(b *testing.B) {
-	d := ioutil.Discard
-
-	for i := 0; i < b.N; i++ {
-		err := Csv()(LatLong(1, FilesJ(0, BENCHROOT)), d, d)
-		if err != nil {
-			b.FailNow()
-		}
-	}
-}
-
-func BenchmarkFILES_1__EXIF_1(b *testing.B) {
+func BenchmarkMTJ__EXIF_1(b *testing.B) {
 	d := ioutil.Discard
 
 	for i := 0; i < b.N; i++ {
