@@ -47,6 +47,17 @@ func init() {
 	fmt.Println("GOMAXPROCS=", runtime.GOMAXPROCS(0))
 }
 
+func BenchmarkMTJ_MAX__EXIF_MAX(b *testing.B) {
+	d := ioutil.Discard
+
+	for i := 0; i < b.N; i++ {
+		err := Csv()(LatLong(0, FilesMtj(BENCHROOT)), d, d)
+		if err != nil {
+			b.FailNow()
+		}
+	}
+}
+
 func BenchmarkFILES_MAX__EXIF_MAX(b *testing.B) {
 	d := ioutil.Discard
 

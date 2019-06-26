@@ -7,7 +7,19 @@ import (
 	"path/filepath"
 	"runtime"
 	"sync"
+
+	"github.com/MichaelTJones/walk"
 )
+
+// Unfortunately, instead of using filepath.WalkFunc as its callback type, walk
+// uses a custom typedef, making the type signature of walk.Walk() gratuitously
+// incompatible with filepath.Walk(), so make a wrapper.
+func _walk(root string, cb filepath.WalkFunc) error {
+	var wrap = func(path string, info os.FileInfo, err error) error {
+		return cb(path, info, err)
+	}
+	return walk.Walk(root, wrap)
+}
 
 type FileInfo struct {
 	path string
@@ -16,6 +28,16 @@ type FileInfo struct {
 
 // Use stdlib's pathwalk() with no parallelism.
 func Files(root string) <-chan FileInfo {
+	return _files(filepath.Walk, root)
+}
+
+func FilesMtj(root string) <-chan FileInfo {
+	return _files(_walk, root)
+}
+
+type walkFn func(string, filepath.WalkFunc) error
+
+func _files(wfn walkFn, root string) <-chan FileInfo {
 	ch := make(chan FileInfo)
 
 	var walker = func(path string, info os.FileInfo, err error) error {
@@ -30,7 +52,7 @@ func Files(root string) <-chan FileInfo {
 
 	go func() {
 		defer close(ch)
-		err := filepath.Walk(root, walker)
+		err := wfn(root, walker)
 		if err != nil {
 			log.Panic(err) // walker() never returns error.
 		}
