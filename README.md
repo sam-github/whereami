@@ -6,6 +6,20 @@ images and writes the image path, latitude and longitude to file as a CSV. Use
 Go routines and channels to do the reads concurrently if possible. For extra
 credit, provide an option to write to HTML as well.
 
+## Usage
+
+```
+usage: whereami [-j N] [-h] <tree-of-images>
+  Print to stdout location information for all images found
+  in 'tree-of-images'.
+
+  -h	print a helpful message
+  -html
+    	report location in HTML, not CSV
+  -j N
+    	use N concurrent workers (default 4)
+```
+
 ## Benchmarks
 
 Run with:
